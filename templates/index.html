@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Fire Evacuation System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <h1>AI FIRE EVACUATION SYSTEM</h1>
+    <p>Dynamic Safe Route Optimization using A* Heuristic Search</p>
+  </header>
+
+  <main class="layout">
+    <!-- LEFT: controls -->
+    <aside class="panel controls">
+      <h2>Controls</h2>
+      <p class="hint">Pick a tool, then click or drag on the building. Click the same item again to remove it.</p>
+      <div class="tools" id="tools">
+        <button class="tool active" data-tool="person">👤 Person</button>
+        <button class="tool" data-tool="fire">🔥 Fire</button>
+        <button class="tool" data-tool="exit">🚪 Exit</button>
+        <button class="tool" data-tool="blocked">⬛ Blocked</button>
+        <button class="tool" data-tool="smoke">💨 Smoke</button>
+        <button class="tool" data-tool="risk">⚠️ High risk</button>
+        <button class="tool" data-tool="crowd">👥 Crowded</button>
+        <button class="tool" data-tool="erase">🧽 Erase cell</button>
+      </div>
+
+      <div class="actions">
+        <button id="btnRoute" class="btn primary">Find Safe Routes</button>
+        <button id="btnSim" class="btn danger">Start Fire Simulation</button>
+        <button id="btnDemo" class="btn">Load Demo Building</button>
+        <button id="btnReset" class="btn">Reset Building</button>
+      </div>
+
+      <h2>Legend</h2>
+      <ul class="legend">
+        <li><i class="sw t-safe"></i>Safe (cost 1)</li>
+        <li><i class="sw t-crowd"></i>Crowded (cost 3)</li>
+        <li><i class="sw t-smoke"></i>Smoke (cost 5)</li>
+        <li><i class="sw t-risk"></i>High risk near fire (cost 10)</li>
+        <li><i class="sw t-fire"></i>Fire (impassable)</li>
+        <li><i class="sw t-blocked"></i>Blocked (impassable)</li>
+        <li><i class="sw t-exit"></i>Emergency exit</li>
+        <li><i class="sw route"></i>Evacuation route (one colour per person)</li>
+      </ul>
+    </aside>
+
+    <!-- CENTER: grid -->
+    <section class="center">
+      <div id="grid" class="grid" aria-label="Building grid"></div>
+      <p id="message" class="message">Loading building…</p>
+    </section>
+
+    <!-- RIGHT: statistics -->
+    <aside class="panel stats">
+      <h2>Evacuation Status</h2>
+      <dl class="status">
+        <div><dt>People</dt><dd id="sPeople">0</dd></div>
+        <div><dt>Fire zones</dt><dd id="sFire">0</dd></div>
+        <div><dt>Safe exits</dt><dd id="sExits">0</dd></div>
+        <div><dt>Blocked paths</dt><dd id="sBlocked">0</dd></div>
+        <div><dt>Evacuated</dt><dd id="sEvac">0</dd></div>
+        <div><dt>Trapped</dt><dd id="sTrap">0</dd></div>
+      </dl>
+      <p class="risk-line">Overall risk <span id="sRisk" class="badge">LOW</span></p>
+
+      <h2>Recommended Route</h2>
+      <div id="routeList" class="route-list"></div>
+      <dl class="status" id="routeInfo"></dl>
+      <table class="exit-table" id="exitTable"></table>
+
+      <h2>Algorithm</h2>
+      <p class="formula">f(n) = g(n) + h(n)</p>
+      <p class="small">h(n) = |x1 − x2| + |y1 − y2| (Manhattan distance)</p>
+      <p class="small" id="algoInfo">Nodes expanded: –</p>
+      <button id="btnReplay" class="btn">Replay A* Search</button>
+      <p id="inspector" class="inspector">Press “Replay A* Search” to watch nodes being evaluated.</p>
+
+      <h2>Event Log</h2>
+      <ul id="log" class="log"></ul>
+    </aside>
+  </main>
+
+  <section class="about panel">
+    <h2>About A*</h2>
+    <div class="about-grid">
+      <div>
+        <p class="formula">f(n) = g(n) + h(n)</p>
+        <p><b>g(n)</b> – the actual cost travelled from the person to cell n. Every cell entered adds its cost (safe 1, crowded 3, smoke 5, high risk 10).</p>
+        <p><b>h(n)</b> – the estimated cost from n to the exit, using Manhattan distance |x1 − x2| + |y1 − y2|. It never over-estimates, because every cell costs at least 1.</p>
+        <p><b>f(n)</b> – the combined estimate. A* always expands the cell with the lowest f(n) first.</p>
+      </div>
+      <div>
+        <h3>Why A* suits evacuation</h3>
+        <p>Dijkstra explores in every direction. A* is guided towards the exits by h(n), so it finds the cheapest route after looking at far fewer cells. Because the heuristic is admissible, the route it returns is the lowest-cost route, which makes it fast enough to re-run every second as the fire spreads.</p>
+      </div>
+      <div>
+        <h3>Why not just the shortest path?</h3>
+        <p>Route 1: 6 cells, 3 of them smoke → cost 3×1 + 3×5 = <b>18</b>.<br>
+           Route 2: 8 cells, all safe → cost 8×1 = <b>8</b>.<br>
+           A* picks Route 2. It is longer but much safer.</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
